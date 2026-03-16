@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Web-Design — Tạo giao diện tức thì</title>
+<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#6C47FF;--accent:#FF6B35;
+  --bg:#09090F;--bg2:#111120;--bg3:#181830;
+  --border:rgba(108,71,255,.18);--border2:rgba(255,255,255,.06);
+  --text:#EEEAFF;--text2:#9B95BB;--text3:#55506F;
+  --warn:#F59E0B;--danger:#EF4444;
+  --r:12px;--f:'Segoe UI',system-ui,sans-serif
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--f);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 55% 45% at 10% 55%,rgba(108,71,255,.11) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 35% at 90% 15%,rgba(255,107,53,.07) 0%,transparent 65%)}
+.wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:0 18px 60px}
+.hdr{text-align:center;padding:44px 0 32px}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(108,71,255,.1);border:1px solid var(--border);border-radius:999px;padding:5px 16px;font-size:11px;font-weight:700;color:var(--brand);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:20px}
+.bdot{width:7px;height:7px;background:var(--brand);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+h1{font-size:clamp(24px,5vw,46px);font-weight:800;line-height:1.1;margin-bottom:12px}
+h1 em{font-style:normal;background:linear-gradient(135deg,#7C5CFF,#B088FF 45%,#FF8C5A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:var(--text2);font-size:15px;max-width:480px;margin:0 auto;line-height:1.65}
+.lbar{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 0 26px}
+.ld{width:11px;height:11px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);transition:all .35s}
+.ld.used{background:rgba(108,71,255,.35);border-color:rgba(108,71,255,.5)}
+.ld.active{background:var(--brand);border-color:var(--brand);box-shadow:0 0 10px rgba(108,71,255,.55)}
+.llbl{font-size:12px;color:var(--text3);margin-left:4px}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:26px 22px 20px;margin-bottom:22px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:540px){.fgrid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase}
+.field input,.field select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;padding:11px 13px;outline:none;transition:border-color .2s;font-family:var(--f);width:100%}
+.field input:focus,.field select:focus{border-color:var(--brand)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:#181830}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+@media(max-width:420px){.sgrid{grid-template-columns:repeat(2,1fr)}}
+.sopt{cursor:pointer;border:1.5px solid var(--border2);border-radius:10px;padding:10px 5px;text-align:center;transition:all .2s;background:var(--bg3);user-select:none}
+.sopt:hover{border-color:rgba(108,71,255,.45)}
+.sopt.sel{border-color:var(--brand);background:rgba(108,71,255,.1)}
+.sico{font-size:18px;margin-bottom:3px}
+.slbl{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.sopt.sel .slbl{color:var(--brand)}
+.crow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:7px}
+.csw{width:27px;height:27px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .2s;flex-shrink:0}
+.csw:hover{transform:scale(1.12)}
+.csw.sel{border-color:#fff;transform:scale(1.2);box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+.cpick{width:27px;height:27px;border-radius:50%;cursor:pointer;border:1.5px dashed var(--text3);overflow:hidden;position:relative;flex-shrink:0}
+.cpick input{position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);border:none;cursor:pointer;padding:0}
+.cval{font-size:11px;color:var(--text3)}
+.cval b{font-weight:700}
+.gbtn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:800;cursor:pointer;transition:all .25s;margin-top:18px;font-family:var(--f)}
+.gbtn.go{background:linear-gradient(135deg,var(--brand),#9966FF);color:#fff;box-shadow:0 4px 24px rgba(108,71,255,.28)}
+.gbtn.go:hover{transform:translateY(-2px);box-shadow:0 7px 32px rgba(108,71,255,.42)}
+.gbtn.go:active{transform:translateY(0)}
+.gbtn.spin,.gbtn.off{background:var(--bg3);color:var(--text3);cursor:not-allowed;border:1px solid var(--border2)}
+.zbtn{display:none;width:100%;padding:13px;border-radius:14px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#0068FF,#00AAFF);color:#fff;margin-top:10px;font-family:var(--f);transition:all .2s}
+.zbtn.show{display:block}
+.zbtn:hover{transform:translateY(-1px)}
+.msg{display:none;padding:10px 13px;border-radius:10px;font-size:13px;text-align:center;margin-top:11px;line-height:1.5}
+.msg.show{display:block}
+.msg.w{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22);color:var(--warn)}
+.msg.f{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.28);color:var(--accent)}
+.msg.l{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:var(--danger)}
+.result{display:none}
+.result.show{display:block}
+.browser{background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:18px}
+.bbar{background:rgba(255,255,255,.02);padding:9px 14px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--border2)}
+.bdt{width:10px;height:10px;border-radius:50%}
+.burl{flex:1;background:var(--bg3);border-radius:5px;padding:4px 10px;margin:0 9px;font-size:11px;color:var(--text3);font-family:monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mwrap{position:relative;min-height:360px;overflow:hidden}
+.watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10}
+.wmtxt{font-size:clamp(14px,3.5vw,30px);font-weight:900;color:rgba(108,71,255,.15);text-transform:uppercase;letter-spacing:4px;transform:rotate(-22deg);border:3px solid rgba(108,71,255,.1);padding:6px 18px;border-radius:7px;white-space:nowrap}
+.sk{padding:22px}
+.skb{background:var(--bg3);border-radius:7px;margin-bottom:11px;animation:skp 1.4s ease-in-out infinite}
+@keyframes skp{0%,100%{opacity:.35}50%{opacity:.75}}
+.hist{margin-top:18px}
+.hist h4{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px}
+.hrow{display:flex;gap:7px;flex-wrap:wrap}
+.hchip{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .18s}
+.hchip:hover{border-color:var(--brand);color:var(--brand)}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(7px)}
+.ov.show{display:flex}
+.popup{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:30px 26px 24px;max-width:390px;width:100%;position:relative}
+.pclose{position:absolute;top:13px;right:14px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1}
+.pclose:hover{color:var(--text)}
+.pbadge{display:inline-block;background:rgba(108,71,255,.14);color:#B088FF;font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:13px;letter-spacing:.5px}
+.popup h3{font-size:19px;font-weight:800;margin-bottom:7px;line-height:1.3}
+.popup p{color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:18px}
+.pinput{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:14px;padding:11px 13px;outline:none;font-family:var(--f);margin-bottom:9px;transition:border-color .2s}
+.pinput:focus{border-color:var(--brand)}
+.pinput::placeholder{color:var(--text3)}
+.psubmit{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--brand),#9966FF);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--f);transition:all .2s}
+.psubmit:hover{transform:translateY(-1px)}
+.pskip{width:100%;padding:7px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--f);margin-top:7px}
+.pskip:hover{color:var(--text2)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:11px 20px;font-size:13px;color:var(--text);z-index:300;transition:transform .32s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="badge"><div class="bdot"></div>AI Web-Design System</div>
+    <h1>Tạo <em>giao diện website</em><br>tức thì bằng AI</h1>
+    <p class="sub">Nhập thông tin thương hiệu — nhận ngay mockup ý tưởng được tạo bởi AI. Miễn phí 3 lượt thử.</p>
+  </div>
+
+  <div class="lbar">
+    <div class="ld active" id="d0"></div>
+    <div class="ld" id="d1"></div>
+    <div class="ld" id="d2"></div>
+    <span class="llbl" id="llbl">3 lượt miễn phí</span>
+  </div>
+
+  <div class="card">
+    <div class="fgrid">
+      <div class="field">
+        <label for="brand">Tên thương hiệu / Công ty</label>
+        <input type="text" id="brand" placeholder="Vd: Hải Long Logistics…" maxlength="60" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label for="ind">Ngành nghề</label>
+        <select id="ind">
+          <option value="">— Chọn ngành nghề —</option>
+          <option value="Logistics & Vận tải">🚛 Logistics &amp; Vận tải</option>
+          <option value="Spa & Làm đẹp">💆 Spa &amp; Làm đẹp</option>
+          <option value="Xây dựng & Bất động sản">🏗️ Xây dựng &amp; Bất động sản</option>
+          <option value="Thương mại điện tử">🛒 Thương mại điện tử</option>
+          <option value="Nhà hàng & F&B">🍜 Nhà hàng &amp; F&amp;B</option>
+          <option value="Công nghệ & Phần mềm">💻 Công nghệ &amp; Phần mềm</option>
+          <option value="Giáo dục & Đào tạo">📚 Giáo dục &amp; Đào tạo</option>
+          <option value="Y tế & Sức khỏe">🏥 Y tế &amp; Sức khỏe</option>
+          <option value="Tài chính & Đầu tư">💰 Tài chính &amp; Đầu tư</option>
+          <option value="Du lịch & Khách sạn">✈️ Du lịch &amp; Khách sạn</option>
+          <option value="Nội thất & Trang trí">🛋️ Nội thất &amp; Trang trí</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgrid" style="margin-top:14px">
+      <div class="field">
+        <label>Phong cách thiết kế</label>
+        <div class="sgrid" id="sgrid">
+          <div class="sopt sel" data-s="Minimalist"><div class="sico">◻</div><div class="slbl">Minimalist</div></div>
+          <div class="sopt" data-s="Corporate"><div class="sico">🏢</div><div class="slbl">Corporate</div></div>
+          <div class="sopt" data-s="Tech-Modern"><div class="sico">⚡</div><div class="slbl">Tech-Modern</div></div>
+          <div class="sopt" data-s="Creative"><div class="sico">🎨</div><div class="slbl">Creative</div></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tông màu chủ đạo</label>
+        <div class="crow" id="crow">
+          <div class="csw sel" data-c="#6C47FF" style="background:#6C47FF"></div>
+          <div class="csw" data-c="#0EA5E9" style="background:#0EA5E9"></div>
+          <div class="csw" data-c="#10B981" style="background:#10B981"></div>
+          <div class="csw" data-c="#F59E0B" style="background:#F59E0B"></div>
+          <div class="csw" data-c="#EF4444" style="background:#EF4444"></div>
+          <div class="csw" data-c="#EC4899" style="background:#EC4899"></div>
+          <div class="csw" data-c="#1E293B" style="background:#1E293B"></div>
+          <div class="csw" data-c="#D97706" style="background:#D97706"></div>
+          <div class="cpick" title="Màu tùy chọn"><input type="color" id="cpicker" value="#6C47FF" oninput="pickColor(this.value)"></div>
+        </div>
+        <div class="cval">Đã chọn: <b id="cval" style="color:#6C47FF">#6C47FF</b></div>
+      </div>
+    </div>
+    <button class="gbtn go" id="gbtn" onclick="gen()">✨ Tạo giao diện Demo ngay</button>
+    <button class="zbtn" id="zbtn" onclick="window.open(ZALO,'_blank')">💬 Liên hệ Chuyên gia qua Zalo</button>
+    <div class="msg" id="lmsg"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdt" style="background:#FF5F57"></div>
+        <div class="bdt" style="background:#FEBC2E"></div>
+        <div class="bdt" style="background:#28C840"></div>
+        <div class="burl" id="burl">www.yourwebsite.com</div>
+        <span style="font-size:10px;color:var(--text3)">Demo Preview</span>
+      </div>
+      <div class="mwrap">
+        <div id="mockup"></div>
+        <div class="watermark"><div class="wmtxt">Demo — WebDesign AI</div></div>
+      </div>
+    </div>
+    <div class="hist" id="hist" style="display:none">
+      <h4>Lịch sử tạo của bạn</h4>
+      <div class="hrow" id="hrow"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="ov" id="popup">
+  <div class="popup">
+    <button class="pclose" onclick="closePopup()">✕</button>
+    <div class="pbadge">🎁 Nhận bản đầy đủ miễn phí</div>
+    <h3>Thích mẫu này?<br>Nhận bản Full HD!</h3>
+    <p>Để lại SĐT/Zalo — chúng tôi gửi ngay <strong>bản phân tích UX/UI chi tiết</strong> và <strong>báo giá</strong> trong 30 phút.</p>
+    <input class="pinput" id="lphone" type="tel" placeholder="SĐT / Zalo của bạn *" autocomplete="tel">
+    <input class="pinput" id="lname" type="text" placeholder="Tên bạn (không bắt buộc)" autocomplete="name">
+    <button class="psubmit" onclick="submitLead()">📩 Gửi thông tin — Nhận ngay!</button>
+    <button class="pskip" onclick="closePopup()">Để sau, tôi chỉ xem trước</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   ĐỔI 3 GIÁ TRỊ NÀY SAU KHI DEPLOY CLOUDFLARE WORKER
+   ══════════════════════════════════════════════════════ */
+const WORKER_URL     = 'https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev';
+const ZALO           = 'https://zalo.me/0123456789';
+const SHEETS_WEBHOOK = ''; // Google Apps Script URL — để trống nếu chưa có
+/* ══════════════════════════════════════════════════════ */
+
+const LIMIT=3,LS_C='wdlg_c',LS_H='wdlg_h',LS_FP='wdlg_fp';
+let selStyle='Minimalist', selColor='#6C47FF';
+let cnt=parseInt(localStorage.getItem(LS_C)||'0');
+let hist=JSON.parse(localStorage.getItem(LS_H)||'[]');
+let fpId=localStorage.getItem(LS_FP)||'';
+let busy=false;
+
+(async()=>{try{const fp=await FingerprintJS.load();const r=await fp.get();fpId=r.visitorId;localStorage.setItem(LS_FP,fpId)}catch(e){}})();
+updateUI(); renderHist();
+
+document.getElementById('sgrid').querySelectorAll('.sopt').forEach(el=>{
+  el.onclick=()=>{document.querySelectorAll('.sopt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');selStyle=el.dataset.s};
+});
+document.getElementById('crow').querySelectorAll('.csw').forEach(el=>{
+  el.onclick=()=>{document.querySelectorAll('.csw').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');selColor=el.dataset.c;rc()};
+});
+function pickColor(v){selColor=v;document.querySelectorAll('.csw').forEach(e=>e.classList.remove('sel'));rc()}
+function rc(){const e=document.getElementById('cval');e.textContent=selColor;e.style.color=selColor;document.getElementById('cpicker').value=selColor}
+
+async function gen(){
+  if(busy||cnt>=LIMIT)return;
+  const brand=document.getElementById('brand').value.trim();
+  const ind=document.getElementById('ind').value;
+  if(!brand){toast('⚠️ Vui lòng nhập tên thương hiệu!');return}
+  if(!ind){toast('⚠️ Vui lòng chọn ngành nghề!');return}
+
+  busy=true;
+  const btn=document.getElementById('gbtn');
+  btn.className='gbtn spin'; btn.textContent='⏳ AI đang tạo giao diện…';
+  document.getElementById('result').className='result show';
+  document.getElementById('burl').textContent='www.'+brand.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.com';
+  document.getElementById('mockup').innerHTML=`<div class="sk">
+    <div class="skb" style="width:50%;height:28px;margin-bottom:16px"></div>
+    <div class="skb" style="width:100%;height:170px;margin-bottom:12px"></div>
+    <div class="skb" style="width:75%;height:13px"></div>
+    <div class="skb" style="width:88%;height:13px"></div>
+    <div class="skb" style="width:60%;height:13px;margin-bottom:20px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="skb" style="height:80px;margin:0"></div>
+      <div class="skb" style="height:80px;margin:0"></div>
+      <div class="skb" style="height:80px;margin:0"></div>
+    </div></div>`;
+
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({brand,industry:ind,style:selStyle,color:selColor})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||'HTTP '+res.status)}
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+
+    document.getElementById('mockup').innerHTML=data.html;
+    cnt++; localStorage.setItem(LS_C,cnt);
+    hist.unshift({brand,ind,style:selStyle,color:selColor});
+    if(hist.length>5)hist=hist.slice(0,5);
+    localStorage.setItem(LS_H,JSON.stringify(hist));
+    updateUI(); renderHist();
+    setTimeout(()=>{document.getElementById('popup').className='ov show'},1800);
+  }catch(err){
+    document.getElementById('mockup').innerHTML=`<div style="padding:48px;text-align:center;color:var(--text2)">⚠️ ${err.message}</div>`;
+  }
+  busy=false; btn.className='gbtn go'; btn.textContent='✨ Tạo giao diện Demo ngay';
+}
+
+function updateUI(){
+  const rem=LIMIT-cnt;
+  ['d0','d1','d2'].forEach((id,i)=>{const d=document.getElementById(id);d.className='ld';if(i<cnt)d.classList.add('used');if(i===cnt&&cnt<LIMIT)d.classList.add('active')});
+  const lbl=document.getElementById('llbl');
+  if(cnt===0)lbl.textContent='3 lượt miễn phí';
+  else if(cnt<LIMIT)lbl.textContent='Còn '+rem+' lượt miễn phí';
+  else lbl.textContent='Đã hết lượt miễn phí';
+  const btn=document.getElementById('gbtn'),zbtn=document.getElementById('zbtn'),msg=document.getElementById('lmsg');
+  msg.className='msg';
+  if(cnt>=LIMIT){btn.className='gbtn off';btn.textContent='🔒 Hết lượt — Liên hệ tư vấn';btn.onclick=null;zbtn.className='zbtn show';msg.className='msg l show';msg.innerHTML='🔒 Bạn đã dùng hết 3 lượt miễn phí. Liên hệ chuyên gia để được tư vấn thiết kế!'}
+  else if(cnt===LIMIT-1){msg.className='msg f show';msg.innerHTML='⚡ Đây là <strong>lượt cuối cùng</strong>! Để lại thông tin để nhận bản thiết kế đầy đủ.'}
+  else if(cnt>0){msg.className='msg w show';msg.innerHTML='💡 Bạn còn <strong>'+rem+' lượt</strong> thử miễn phí.'}
+}
+
+function renderHist(){
+  if(!hist.length)return;
+  document.getElementById('hist').style.display='block';
+  document.getElementById('hrow').innerHTML=hist.map((h,i)=>`<div class="hchip" onclick="restoreH(${i})"><span style="color:${h.color}">●</span> ${h.brand} · ${h.style}</div>`).join('');
+}
+function restoreH(i){const h=hist[i];if(!h)return;document.getElementById('brand').value=h.brand;document.getElementById('ind').value=h.ind;document.querySelectorAll('.sopt').forEach(e=>e.classList.toggle('sel',e.dataset.s===h.style));selStyle=h.style;selColor=h.color;rc()}
+
+function closePopup(){document.getElementById('popup').className='ov'}
+async function submitLead(){
+  const phone=document.getElementById('lphone').value.trim();
+  if(!phone){toast('⚠️ Vui lòng nhập SĐT/Zalo!');return}
+  const name=document.getElementById('lname').value.trim();
+  const brand=document.getElementById('brand').value.trim();
+  const ind=document.getElementById('ind').value;
+  closePopup();
+  if(SHEETS_WEBHOOK){
+    try{await fetch(SHEETS_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({timestamp:new Date().toISOString(),phone,name,brand,industry:ind,style:selStyle,color:selColor,fp:fpId,source:'AI Web-Design Lead Gen'})})}catch(e){}
+  }
+  toast('✅ Cảm ơn! Chúng tôi sẽ liên hệ '+phone+' trong 30 phút.');
+}
+
+let _tt;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';clearTimeout(_tt);_tt=setTimeout(()=>{t.className='toast'},3500)}
+</script>
+</body>
+</html>
