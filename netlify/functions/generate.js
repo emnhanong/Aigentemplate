@@ -38,7 +38,7 @@ Rules: ALL text Vietnamese · NO external resources · inline styles only · app
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": "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",
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
